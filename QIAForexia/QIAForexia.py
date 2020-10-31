@@ -4,6 +4,7 @@ QIAForexia library
 
 # pylint: disable=invalid-name
 
+import numpy
 import yaml
 
 from QIAForexia.trader import Trader
@@ -25,4 +26,10 @@ def start(account, password):
     trader.setup(config)
 
     if "GET" in config.keys():
-        _candles = trader.get_candles()
+        candles = trader.get_candles()
+        with open(
+            f"stocks/{config['CURRENCY_PEER']}_{config['TIME_FRAME']}_"
+            f"{config['START_DATE']}_{config['END_DATE']}.npy",
+            "wb",
+        ) as file:
+            numpy.save(file, candles)
