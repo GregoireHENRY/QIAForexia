@@ -1,4 +1,3 @@
-# See https://pre-commit.com/ for usage and config
 repos:
 - repo: local
   hooks:
@@ -13,16 +12,15 @@ repos:
     name: black
     stages: [commit]
     language: system
-    entry: pipenv run black
+    entry: pipenv run black --line-length=80
     types: [python]
 
-  - id: flake8
-    name: flake8
+  - id: pylint
+    name: pylint
     stages: [commit]
     language: system
-    entry: pipenv run flake8
+    entry: pipenv run pylint
     types: [python]
-    exclude: setup.py
 
   - id: mypy
     name: mypy

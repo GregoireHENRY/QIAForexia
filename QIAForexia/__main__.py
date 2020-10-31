@@ -1,7 +1,12 @@
-import sys
+"""
+QIAForexia library's main.
+"""
 
-from QIAForexia.QIAForexia import fib
+import yaml
+
+from QIAForexia.QIAForexia import start
 
 if __name__ == "__main__":
-    n = int(sys.argv[1])
-    print(fib(n))
+    with open(r"config.yaml") as file:
+        config = yaml.full_load(file)
+    start(config)
