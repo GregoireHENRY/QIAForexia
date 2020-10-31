@@ -10,6 +10,7 @@ python_version = "3.8"
 numpy = "*"
 xtbapi = "*"
 pyyaml = "*"
+stdiomask = "*"
 
 [dev-packages]
 black = "==20.8b1"

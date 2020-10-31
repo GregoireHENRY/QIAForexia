@@ -4,18 +4,23 @@ QIAForexia library
 
 # pylint: disable=invalid-name
 
-from typing import Dict
+import yaml
 
 from QIAForexia.trader import Trader
 
 # from pudb import set_trace as bp
 
 
-def start(config: Dict):
+def start(account, password):
     """Start a trading session from a config file."""
+    # Load config
+    with open(r"config.yaml") as file:
+        config = yaml.full_load(file)
+
+    # Start Trader
     trader = Trader(
-        config["ACCOUNT"],
-        config["PASSWORD"],
+        account,
+        password,
     )
     trader.setup(config)
 

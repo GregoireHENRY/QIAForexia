@@ -6,10 +6,12 @@ import datetime
 import logging
 import sys
 import time
-from typing import Dict, Optional
+from typing import Dict
 
 import numpy
 from XTBApi.api import Client
+
+import QIAForexia.kit as kit
 
 
 class Trader(Client):
@@ -35,6 +37,7 @@ class Trader(Client):
         super().__init__()
         self.client = Client()
         self.client.login(account, password, account_type)
+        print(f"{kit.Colors.GREEN}✓{kit.Colors.NC}")
 
     def setup(
         self,
@@ -45,6 +48,14 @@ class Trader(Client):
         """
         self.config.update(config)
 
+    def test_if_configured(self, *keys: str):
+        """Test if variables are correctly configured in config."""
+        for key in keys:
+            if key not in self.config.keys():
+                sys.exit(f"Error: {key} does not exist in Trader.config.")
+            if self.config[key] is None:
+                sys.exit(f"Error: {key} is None.")
+
     def candle_time(self, candles: Dict, index: int = 0) -> str:
         """Get time of candle by index from now to past."""
         if "TIME_FORMAT" not in self.config.keys():
@@ -53,21 +64,12 @@ class Trader(Client):
             "TIME_FORMAT", time.localtime(candles[index]["timestamp"])
         )
 
-    def get_candles_last(
-        self,
-        currency_peer: str = None,
-        time_frame: int = None,
-        number: int = None,
-    ):
-        """Get number's latest candles with possible setup configuration."""
-        if not currency_peer:
-            currency_peer = self.config["CURRENCY_PEER"]
-        if not time_frame:
-            time_frame = self.config["TIME_FRAME"]
-        if not number:
-            number = self.config["NUMBER"]
+    def get_candles_last(self, number_candles: int = 1):
+        """Get number's latest candles."""
         candles = self.client.get_lastn_candle_history(
-            currency_peer, time_frame, number
+            self.config["CURRENCY_PEER"],
+            self.config["TIME_FRAME"],
+            number_candles,
         )
         _size_candles = len(candles)
         _pool_time = self.candle_time(candles, 0)
@@ -76,13 +78,9 @@ class Trader(Client):
 
     def get_candles(
         self,
-        currency_peer: str = None,
-        time_frame: int = None,
-        start_date: str = None,
-        end_date: str = None,
     ):
         """
-        Get candles from start to end dates with possible setup configuration.
+        Get candles from start to end date.
         It extract candles as a Nx5 NDArray matrix with N the number of
         requested candles. The 5 columns are:
             timestamp, open, close, high, low
@@ -90,39 +88,30 @@ class Trader(Client):
         One weakness of using XTApi is that it can only extract the n-th latest
         candles. Here, we are removing the overage candles.
         """
-        if not currency_peer:
-            currency_peer = self.config["CURRENCY_PEER"]
-        if not time_frame:
-            time_frame = self.config["TIME_FRAME"]
-        if not start_date:
-            start_date = self.config["START_DATE"]
-        if not end_date:
-            end_date = self.config["END_DATE"]
-        if "TIME_FORMAT" not in self.config.keys():
-            sys.exit("Error: Trader.time_format is not setup.")
-        if "TIME_FRAME" not in self.config.keys():
-            sys.exit("Error: Trader.time_frame is not setup.")
-        if "START_DATE" not in self.config.keys():
-            sys.exit("Error: Trader.start_date is not setup.")
-        if "END_DATE" not in self.config.keys():
-            sys.exit("Error: Trader.end_date is not setup.")
+        self.test_if_configured(
+            "TIME_FORMAT", "TIME_FRAME", "START_DATE", "END_DATE"
+        )
         start_timestamp = time.mktime(
             datetime.datetime.strptime(
-                start_date, self.config["TIME_FORMAT"]
+                self.config["START_DATE"], self.config["TIME_FORMAT"]
             ).timetuple()
         )
         end_timestamp = time.mktime(
             datetime.datetime.strptime(
-                end_date, self.config["TIME_FORMAT"]
+                self.config["END_DATE"], self.config["TIME_FORMAT"]
             ).timetuple()
         )
-        last_candle = self.get_candles_last(number=1)
+        last_candle = self.get_candles_last()
         last_timestamp = last_candle[0]["timestamp"]
         number_from_last = (
-            int((last_timestamp - start_timestamp) / time_frame) + 1
+            int((last_timestamp - start_timestamp) / self.config["TIME_FRAME"])
+            + 1
         )
-        number_actual = int((end_timestamp - start_timestamp) / time_frame) + 1
-        candles = self.get_candles_last(number=number_from_last)
+        number_actual = (
+            int((end_timestamp - start_timestamp) / self.config["TIME_FRAME"])
+            + 1
+        )
+        candles = self.get_candles_last(number_candles=number_from_last)
         candles = candles[:number_actual]
         candles_array = numpy.zeros((number_actual, 5))
         for _index, candle in enumerate(candles):

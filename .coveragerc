@@ -1,6 +1,6 @@
 [run]
 source = QIAForexia
-omit = QIAForexia/__main__.py
+omit = QIAForexia/__main__.py, QIAForexia/kit.py
 
 [report]
 exclude_lines =
