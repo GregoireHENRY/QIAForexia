@@ -40,8 +40,8 @@ repos:
 
   - id: pytest-cov
     name: pytest
-    stages: [push]
+    stages: [commit]
     language: system
-    entry: pipenv run pytest --cov --cov-fail-under=100
+    entry: pipenv run pytest --cov --cov-fail-under=100 --cov-report term-missing
     types: [python]
     pass_filenames: false

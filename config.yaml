@@ -11,3 +11,6 @@ END_DATE: "30.10.2020 21:55"
 
 # Settings
 TIME_FORMAT: "%d.%m.%Y %H:%M"
+
+# Actions
+GET:

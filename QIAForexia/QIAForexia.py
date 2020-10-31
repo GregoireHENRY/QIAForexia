@@ -17,12 +17,7 @@ def start(config: Dict):
         config["ACCOUNT"],
         config["PASSWORD"],
     )
-    trader.setup(
-        time_format=config["TIME_FORMAT"],
-        currency_peer=config["CURRENCY_PEER"],
-        number=config["NUMBER"],
-        time_frame=config["TIME_FRAME"],
-        start_date=config["START_DATE"],
-        end_date=config["END_DATE"],
-    )
-    _candles = trader.get_candles()
+    trader.setup(config)
+
+    if "GET" in config.keys():
+        _candles = trader.get_candles()

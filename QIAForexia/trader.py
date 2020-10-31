@@ -26,12 +26,7 @@ class Trader(Client):
     ):
         self.account: int = account
         self.account_type: str = account_type
-        self.time_format: Optional[str] = None
-        self.currency_peer: Optional[str] = None
-        self.time_frame: Optional[int] = None
-        self.number: Optional[int] = None
-        self.start_date: Optional[str] = None
-        self.end_date: Optional[str] = None
+        self.config: Dict = {}
 
         if not logger:
             logging.disable(sys.maxsize)
@@ -43,39 +38,19 @@ class Trader(Client):
 
     def setup(
         self,
-        time_format: str = None,
-        currency_peer: str = None,
-        time_frame: int = None,
-        number: int = None,
-        start_date: str = None,
-        end_date: str = None,
+        config: Dict,
     ):
         """
-        Allows to change currency_peer, timeframe, number of candles and start
-        and end date.
+        Import configuration
         """
-
-        # pylint: disable=too-many-arguments
-
-        if time_format:
-            self.time_format = time_format
-        if currency_peer:
-            self.currency_peer = currency_peer
-        if time_frame:
-            self.time_frame = time_frame
-        if number:
-            self.number = number
-        if start_date:
-            self.start_date = start_date
-        if end_date:
-            self.end_date = end_date
+        self.config.update(config)
 
     def candle_time(self, candles: Dict, index: int = 0) -> str:
         """Get time of candle by index from now to past."""
-        if self.time_format is None:
+        if "TIME_FORMAT" not in self.config.keys():
             sys.exit("Error: Trader.time_format is not setup.")
         return time.strftime(
-            self.time_format, time.localtime(candles[index]["timestamp"])
+            "TIME_FORMAT", time.localtime(candles[index]["timestamp"])
         )
 
     def get_candles_last(
@@ -86,11 +61,11 @@ class Trader(Client):
     ):
         """Get number's latest candles with possible setup configuration."""
         if not currency_peer:
-            currency_peer = self.currency_peer
+            currency_peer = self.config["CURRENCY_PEER"]
         if not time_frame:
-            time_frame = self.time_frame
+            time_frame = self.config["TIME_FRAME"]
         if not number:
-            number = self.number
+            number = self.config["NUMBER"]
         candles = self.client.get_lastn_candle_history(
             currency_peer, time_frame, number
         )
@@ -116,26 +91,30 @@ class Trader(Client):
         candles. Here, we are removing the overage candles.
         """
         if not currency_peer:
-            currency_peer = self.currency_peer
+            currency_peer = self.config["CURRENCY_PEER"]
         if not time_frame:
-            time_frame = self.time_frame
+            time_frame = self.config["TIME_FRAME"]
         if not start_date:
-            start_date = self.start_date
+            start_date = self.config["START_DATE"]
         if not end_date:
-            end_date = self.end_date
-        if self.time_format is None:
+            end_date = self.config["END_DATE"]
+        if "TIME_FORMAT" not in self.config.keys():
             sys.exit("Error: Trader.time_format is not setup.")
-        if time_frame is None:
+        if "TIME_FRAME" not in self.config.keys():
             sys.exit("Error: Trader.time_frame is not setup.")
-        if start_date is None:
+        if "START_DATE" not in self.config.keys():
             sys.exit("Error: Trader.start_date is not setup.")
-        if end_date is None:
+        if "END_DATE" not in self.config.keys():
             sys.exit("Error: Trader.end_date is not setup.")
         start_timestamp = time.mktime(
-            datetime.datetime.strptime(start_date, self.time_format).timetuple()
+            datetime.datetime.strptime(
+                start_date, self.config["TIME_FORMAT"]
+            ).timetuple()
         )
         end_timestamp = time.mktime(
-            datetime.datetime.strptime(end_date, self.time_format).timetuple()
+            datetime.datetime.strptime(
+                end_date, self.config["TIME_FORMAT"]
+            ).timetuple()
         )
         last_candle = self.get_candles_last(number=1)
         last_timestamp = last_candle[0]["timestamp"]
